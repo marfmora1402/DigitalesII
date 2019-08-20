@@ -1,0 +1,87 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity controlador is
+Port(
+		Resetn, clock: in std_logic;
+		encender, start, remojado, jeans, toalla, normal, delicado: in std_logic;
+		lleno, t_remojado, t_lavado, t_exprimido, t_enjuague, t_exprimido2, t_enjuague2, t_desague, or_p, t_exprimidofinal: in std_logic;
+		sr30,sd,sn,st,sj,en_nivel, en_remojado, en_lavado, en_exprimido, en_enjuague,en_exprimido2,en_enjuague2,en_desague,en_exprimidofinal,  valvula, bomba, centrifuga: out std_logic);
+		
+end controlador;
+
+architecture solucion of controlador is
+type estado is (ta,tb,td,te,tf,tg,th,ti,tj,tk,tl,tm,tn,tp);
+signal y: estado;
+begin
+Process(Resetn, clock)
+begin
+	if Resetn = '1' then y <= ta;
+	elsif clock'event and clock = '1' then
+		case y is 
+		when ta=> if encender='1'then y<= tb; else y<= ta; end if;
+		when tb=> y<= td;
+		when td=> if or_p = '1' then y<=te; else y<= td; end if;
+		when te=> if start='1' then y<= tf; else y<=te; end if;
+		when tf=> if start='1' then y<= tf; else y<=tg; end if;
+		when tg=> if lleno='1' then y<=th; else y<=tg; end if;
+		when th=> if t_remojado='1' then y<=ti; else y<=th; end if;
+		when ti=> if t_lavado='1' then y<=tj; else y<=ti; end if;
+		when tj=> if t_exprimido='1'then y<=tk; else y<=tj; end if;
+		when tk=> if t_enjuague='1' then y<=tl; else y<=tk; end if;
+		when tl=> if t_exprimido2='1' then y<=tm; else y<=tl; end if;
+		when tm=> if t_enjuague2='1' then y<=tn; else y<=tm; end if;
+		when tn=> if t_exprimidofinal='1' then y<=tp; else y<=tn; end if;
+		when tp=> if t_desague='1' then y<=ta; else y<=tp; end if;
+									
+		end case;
+	end if;
+end process;
+
+process (y,remojado, delicado, normal, toalla, jeans, start)
+
+begin 
+sr30<= '0'; sd<= '0';sn <= '0';st <= '0';sj <= '0';
+en_nivel<= '0'; en_remojado<= '0'; en_lavado<= '0'; 
+bomba<= '0'; centrifuga<= '0'; en_exprimido<= '0'; 
+en_enjuague<= '0';en_exprimido2 <= '0';en_enjuague2<= '0';
+en_desague<= '0'; valvula<= '0';en_exprimidofinal<='0';
+
+	case y is
+	when ta=>
+	when tb=>sr30<= remojado;
+	
+	when td=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;sr30<= remojado;
+	when te=>	sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;sr30<= remojado;	
+
+	when tf=> sr30<= remojado;sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_nivel<=not(start);
+
+	when tg=> 
+		sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;valvula<='1';sr30<=remojado;
+	
+	
+	when th=> 
+		sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_remojado<='1';sr30<=remojado;
+	
+	when ti=> 
+		sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_lavado<='1';sr30<=remojado;
+	
+	
+	when tj=> 
+		sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_exprimido<='1';centrifuga<='1'; bomba<='1';sr30<= remojado; 
+	
+	when tk=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_enjuague<='1';centrifuga<='0'; bomba<='0';sr30<= remojado;
+	
+	when tl=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_exprimido2<='1';centrifuga<='1'; bomba<='1'; 
+	
+	when tm=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_enjuague2<='1';centrifuga<='0'; bomba<='0';
+	
+	when tn=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_exprimidofinal<='1';centrifuga<='1'; bomba<='1'; 
+
+	when tp=> sd<=delicado;sn<=normal;st<=toalla;sj<=jeans;en_desague<='1';bomba<='1';
+				
+
+end case;
+end process;
+end solucion;
+		
